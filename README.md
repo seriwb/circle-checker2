@@ -64,3 +64,20 @@ code - 88
 ## License
 
 MIT License
+
+
+
+# 開発情報
+
+- Rustのインストール
+
+## 各種手順
+
+```
+# ローカル実行
+cargo run
+
+# ビルド
+cargo build
+
+```
