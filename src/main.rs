@@ -1,24 +1,16 @@
 mod bootstrap;
 mod twitter;
 
+use twitter::Twitter;
+
 fn main() {
     let config = bootstrap::init();
-    // execute(config);
+
+    // TODO: Twitter認証
+    let mut twitter = Twitter::new(config.access_token, config.access_token_secret);
+    twitter.authenticate();
+
+    // TODO: Twitterから情報取得
+
+    // TODO: 結果を画面出力
 }
-
-// fn execute(config: Config) {
-//     // TODO: Twitter認証
-//     let userinfo = twitter::authenticate();
-
-//     // TODO: 設定ファイル読み込み
-//     let filterring_lists: [] = load_config();
-
-//     // TODO: Twitterから情報取得
-
-//     // TODO: 結果を画面出力
-// }
-
-// /**
-//  * configディレクトリ配下の設定を読み込む
-//  */
-// fn load_config() -> any {}

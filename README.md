@@ -15,7 +15,7 @@ Twitterのユーザ名からイベント参加情報を抽出するツールで�
 ### 事前準備
 
 1. [releases](https://github.com/seriwb/circle-checker2/releases/latest)からzipファイルを取得し、適当な場所に展開
-2. リストを対象にする場合は、config/config.txtの`cc.target.list = ""`にチェックするリスト名を入力  
+2. リストを対象にする場合は、config/config.tomlの`target_list = ""`にチェックするリスト名を入力  
 （フォローユーザを対象にする場合は未入力のままにしておく）
 3. config/filter.txtにユーザ名に含まれる可能性のあるイベント名を列挙  
 （デフォルトはコミケ用で、イベント名指定には正規表現が利用可能です） 
@@ -25,11 +25,13 @@ Twitterのユーザ名からイベント参加情報を抽出するツールで�
 
 ### 実行手順
 
-コンソールからzipファイルを展開した場所まで移動し、以下のコマンドを実行  
+コンソールからzipファイルを展開した場所まで移動し、以下のコマンドを実行してください。
 
 ```
 ./circle-checker
 ```
+
+初回はTwitter認証のページがデフォルトブラウザで開くので、認証後表示されたPINをコンソールに入力してください。
 
 ※Twitterアカウント情報をリセットしたい場合は、dbディレクトリを削除してください。
 
@@ -43,16 +45,13 @@ filter.txtはUTF-8形式で保存してください。
 15分以上待ってから再度実行してください。
 
 ```
-Exception in thread "main" 429:Returned in API v1.1 when a request cannot be served due to the application's rate limit having been exhausted for the resource. See Rate Limiting in API v1.1.(https://dev.twitter.com/docs/rate-limiting/1.1)
-message - Rate limit exceeded
-code - 88
+Rate limit exceeded
 ```
 
 
 ## 今後の予定
 
 - アイコンと固定ツイートの取得
-- HTMLの結果出力
 - TLに流れてくるRTを対象にするオプション追加
 
 
