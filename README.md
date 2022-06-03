@@ -80,4 +80,6 @@ cargo run
 # ビルド
 cargo build
 
+# リリースビルド
+cargo build -r
 ```
