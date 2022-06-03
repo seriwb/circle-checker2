@@ -1,7 +1,13 @@
 use config::Config;
 use std::collections::HashMap;
 
+pub struct CC {
+    pub target_list: String,
+    pub tweet_maxcount: u32,
+    pub loop_waittime: u32,
+}
 pub struct AppConfig {
+    pub cc: CC,
     pub access_token: String,
     pub access_token_secret: String,
 }
@@ -18,13 +24,10 @@ pub fn init() -> AppConfig {
         .add_source(config::File::with_name("config/config.toml"))
         .build()
         .unwrap();
-
-    println!(
-        "{:?}",
-        settings //.get_table("cc")
-            .try_deserialize::<HashMap<String, HashMap<String, String>>>()
-            .unwrap()
-    );
+    let configMap = settings //.get_table("cc")
+        .try_deserialize::<HashMap<String, HashMap<String, String>>>()
+        .unwrap();
+    println!("{:?}", configMap);
 
     let bytes = include_bytes!("../.secret");
 
@@ -39,18 +42,22 @@ pub fn init() -> AppConfig {
 
     // 直で利用する例（空列も表示している）
     for v in secret.split('\n') {
-      println!("{}", v);
+        println!("{}", v);
     }
 
     // TODO: ファイル読み込み
     // let filterring_lists: [] = load_filter();
 
     AppConfig {
+        cc: CC {
+            target_list: configMap["cc"]["target_list"].to_string(),
+            tweet_maxcount: configMap["cc"]["tweet_maxcount"].parse().unwrap(),
+            loop_waittime: configMap["cc"]["loop_waittime"].parse().unwrap(),
+        },
         access_token: test[0]["consumerKey=".len()..].to_string(),
         access_token_secret: test[1]["consumerSecret=".len()..].to_string(),
     }
 }
-
 
 // フィルタ設定の読み込み
 // fn load_filter() -> Vec<String> {}
