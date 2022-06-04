@@ -8,10 +8,6 @@ async fn main() {
     env_logger::init();
 
     let config = bootstrap::init();
-    println!(
-        "{} {} {}",
-        config.cc.target_list, config.cc.tweet_maxcount, config.cc.loop_waittime
-    );
 
     // TODO: Twitter認証
     let mut twitter = Twitter::new(config.consumer_key, config.consumer_secret);
@@ -37,8 +33,7 @@ struct CircleInfo {
 }
 impl CircleInfo {}
 
-fn ountput(lists: &Vec<CircleInfo>) {
-}
+fn ountput(lists: &Vec<CircleInfo>) {}
 
 fn print_header(separator: &str) {
     let headers = [

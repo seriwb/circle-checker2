@@ -1,12 +1,22 @@
-use config::Config;
-use std::collections::HashMap;
+use config::{Config, ConfigError};
+use serde_derive::Deserialize;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct CC {
-    pub target_list: String,
+    pub target_list: Vec<String>,
     pub tweet_maxcount: u32,
     pub loop_waittime: u32,
 }
+impl CC {
+    fn new() -> Result<Self, ConfigError> {
+        let settings = Config::builder()
+            .add_source(config::File::with_name("config/config.toml"))
+            .build()
+            .unwrap();
+        settings.try_deserialize()
+    }
+}
+
 #[derive(Debug)]
 pub struct AppConfig {
     pub cc: CC,
@@ -22,26 +32,14 @@ pub struct AppConfig {
  * </ul>
  */
 pub fn init() -> AppConfig {
-    let settings = Config::builder()
-        .add_source(config::File::with_name("config/config.toml"))
-        .build()
-        .unwrap();
-    let config_map = settings //.get_table("cc")
-        .try_deserialize::<HashMap<String, HashMap<String, String>>>()
-        .unwrap();
-    println!("{:?}", config_map);
 
     let bytes = include_bytes!("../.secret");
-
     let secret = String::from_utf8_lossy(bytes);
     // 配列で確保する例
     let test = secret.split('\n').fold(Vec::new(), |mut s, i| {
         s.push(i.to_string());
         s
     });
-    // println!("{}", &test[0]["consumerKey=".len()..]);
-    // println!("{}", &test[1]["consumerSecret=".len()..]);
-
     // 直で利用する例（空列も表示している）
     // for v in secret.split('\n') {
     //     println!("{}", v);
@@ -50,12 +48,9 @@ pub fn init() -> AppConfig {
     // TODO: ファイル読み込み
     // let filterring_lists: [] = load_filter();
 
+    let cc = CC::new();
     AppConfig {
-        cc: CC {
-            target_list: config_map["cc"]["target_list"].to_string(),
-            tweet_maxcount: config_map["cc"]["tweet_maxcount"].parse().unwrap(),
-            loop_waittime: config_map["cc"]["loop_waittime"].parse().unwrap(),
-        },
+        cc: cc.unwrap(),
         consumer_key: test[0]["consumerKey=".len()..].to_string(),
         consumer_secret: test[1]["consumerSecret=".len()..].to_string(),
     }
