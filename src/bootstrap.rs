@@ -10,8 +10,8 @@ pub struct CC {
 #[derive(Debug)]
 pub struct AppConfig {
     pub cc: CC,
-    pub access_token: String,
-    pub access_token_secret: String,
+    pub consumer_key: String,
+    pub consumer_secret: String,
 }
 
 /**
@@ -43,9 +43,9 @@ pub fn init() -> AppConfig {
     // println!("{}", &test[1]["consumerSecret=".len()..]);
 
     // 直で利用する例（空列も表示している）
-    for v in secret.split('\n') {
-        println!("{}", v);
-    }
+    // for v in secret.split('\n') {
+    //     println!("{}", v);
+    // }
 
     // TODO: ファイル読み込み
     // let filterring_lists: [] = load_filter();
@@ -56,8 +56,8 @@ pub fn init() -> AppConfig {
             tweet_maxcount: config_map["cc"]["tweet_maxcount"].parse().unwrap(),
             loop_waittime: config_map["cc"]["loop_waittime"].parse().unwrap(),
         },
-        access_token: test[0]["consumerKey=".len()..].to_string(),
-        access_token_secret: test[1]["consumerSecret=".len()..].to_string(),
+        consumer_key: test[0]["consumerKey=".len()..].to_string(),
+        consumer_secret: test[1]["consumerSecret=".len()..].to_string(),
     }
 }
 

@@ -3,17 +3,11 @@ use std::{
     io::{stdout, Read, Write},
 };
 
-use egg_mode::Token;
-use log::{debug, trace};
+use egg_mode::{auth::verify_tokens, KeyPair, Token};
+use log::debug;
 use serde::{Deserialize, Serialize};
 
-pub struct Config {
-    pub token: egg_mode::Token,
-    pub user_id: u64,
-    pub screen_name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Twitter {
     consummer_key: String,
     consummer_secret: String,
@@ -47,7 +41,9 @@ impl Twitter {
                 access_token: data.access_token.to_string(),
                 access_token_secret: data.access_token_secret.to_string(),
                 account: User {
-                    ..Default::default()
+                    name: data.account.name,
+                    screen_name: data.account.screen_name,
+                    url: data.account.url,
                 },
             };
             twitter
@@ -60,28 +56,20 @@ impl Twitter {
 
         let account = self.verify_credentials().await;
         // まだアカウント情報がないor認証に失敗する場合はPIN認証のプロセスを実施
-        if !account.existed() && !self.is_authorized() {
-            self.oauth_process().await;
-            // self.account = self.verify_credentials().await;
+        if !account.existed() {
+            self.oauth_process(self.consummer_key.clone(), self.consummer_secret.clone())
+                .await;
         } else {
             self.account = account;
         }
-        // verifyCredentials() -> User
-    }
-
-    // 認証済みかどうかを確認する
-    // TODO: Twitterの連携アプリ認証が取り消されていた場合、falseを返す。
-    fn is_authorized(&self) -> bool {
-        // TODO: 現在のアクセストークンの有効性をチェック(get_access_tokenができるかどうか)
-        false
+        // self.account = self.verify_credentials().await;
     }
 
     // Twitterのユーザ認証を行い、アクセストークンを設定する
-    async fn oauth_process(&mut self) {
+    async fn oauth_process(&mut self, consummer_key: String, consummer_secret: String) {
         debug!("OAuth authentication start.");
         // Twitter APIでアクセストークンを取得
-        let token =
-            get_access_tokens(self.consummer_key.clone(), self.consummer_secret.clone()).await;
+        let token = get_access_tokens(consummer_key, consummer_secret).await;
         println!("{:?}", token.0);
         match token.0 {
             Token::Access {
@@ -106,23 +94,34 @@ impl Twitter {
         debug!("OAuth authentication end.");
     }
 
-    // AccessTokenをファイルに保存
+    // AccessTokenをファイルに保存（アプリのキーは消す）
     fn store_access_tokens(&self) {
+        let mut store_data = self.clone();
+        store_data.consummer_key = "".to_string();
+        store_data.consummer_secret = "".to_string();
         let mut file = File::create("token").expect("not_found");
-        let encoded: Vec<u8> = bincode::serialize(&self).unwrap();
+        let encoded: Vec<u8> = bincode::serialize(&store_data).unwrap();
         file.write_all(&encoded).expect("cannot write");
     }
 
     // アクセス可能なユーザ情報を取得
     async fn verify_credentials(&self) -> User {
         // https://docs.rs/egg-mode/latest/egg_mode/auth/fn.verify_tokens.html
+        let token = Token::Access {
+            consumer: KeyPair::new(self.consummer_key.clone(), self.consummer_secret.clone()),
+            access: KeyPair::new(self.access_token.clone(), self.access_token_secret.clone()),
+        };
+        let twitter_user = verify_tokens(&token).await;
 
-        // TODO: 現在の構造体情報で認証チャレンジ
-        if true {
-            // TODO: 認証できたら取得したユーザ情報を設定して返却
-            println!("set account");
+        if twitter_user.is_ok() {
+            // 認証できたら取得したユーザ情報を設定して返却
+            debug!("set account");
+            let data = twitter_user.unwrap();
+            debug!("{:?}", data);
             User {
-                ..Default::default()
+                name: data.name.to_string(),
+                screen_name: data.id.to_string(),
+                url: format!("https://twitter.com/{}", data.name.to_string()),
             }
         } else {
             User {
@@ -172,10 +171,9 @@ async fn get_access_tokens(
     }
 }
 
-
 // ローカルに保存済みのアクセストークンを取得する
 fn load_access_tokens() -> Result<Twitter, String> {
-    let mut file = File::open("token");
+    let file = File::open("token");
     if file.is_err() {
         return Err("damedatta".to_string());
     }
@@ -183,11 +181,11 @@ fn load_access_tokens() -> Result<Twitter, String> {
     let _ = file.unwrap().read_to_end(&mut buffer);
     let twitter: Twitter = bincode::deserialize(&buffer).unwrap();
 
-    trace!("{:?}", &twitter);
+    debug!("load data: {:?}", &twitter);
     return Ok(twitter);
 }
 
-#[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct User {
     name: String,
     screen_name: String, //id
@@ -205,7 +203,6 @@ impl Default for User {
 impl User {
     fn existed(&self) -> bool {
         if self == &Default::default() {
-            println!("まだデータ無いよ"); // TODO:呼ぶタイミングチェック
             false
         } else {
             true

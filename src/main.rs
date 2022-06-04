@@ -14,7 +14,7 @@ async fn main() {
     );
 
     // TODO: Twitter認証
-    let mut twitter = Twitter::new(config.access_token, config.access_token_secret);
+    let mut twitter = Twitter::new(config.consumer_key, config.consumer_secret);
     twitter.authenticate().await;
 
     println!("{:?}", twitter);
@@ -26,7 +26,7 @@ async fn main() {
 
 #[derive(Debug)]
 struct CircleInfo {
-    twitter_ame: String,
+    twitter_name: String,
     twitter_id: String,
     twitter_url: String,
     match_string: String,
