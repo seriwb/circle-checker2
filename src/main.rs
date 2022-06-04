@@ -3,7 +3,8 @@ mod twitter;
 
 use twitter::Twitter;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
 
     let config = bootstrap::init();
@@ -14,8 +15,9 @@ fn main() {
 
     // TODO: Twitter認証
     let mut twitter = Twitter::new(config.access_token, config.access_token_secret);
-    twitter.authenticate();
+    twitter.authenticate().await;
 
+    println!("{:?}", twitter);
     // TODO: Twitterから情報取得
     // list users
     // TODO: 結果を画面出力

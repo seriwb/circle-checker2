@@ -1,11 +1,13 @@
 use config::Config;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct CC {
     pub target_list: String,
     pub tweet_maxcount: u32,
     pub loop_waittime: u32,
 }
+#[derive(Debug)]
 pub struct AppConfig {
     pub cc: CC,
     pub access_token: String,
@@ -24,10 +26,10 @@ pub fn init() -> AppConfig {
         .add_source(config::File::with_name("config/config.toml"))
         .build()
         .unwrap();
-    let configMap = settings //.get_table("cc")
+    let config_map = settings //.get_table("cc")
         .try_deserialize::<HashMap<String, HashMap<String, String>>>()
         .unwrap();
-    println!("{:?}", configMap);
+    println!("{:?}", config_map);
 
     let bytes = include_bytes!("../.secret");
 
@@ -50,9 +52,9 @@ pub fn init() -> AppConfig {
 
     AppConfig {
         cc: CC {
-            target_list: configMap["cc"]["target_list"].to_string(),
-            tweet_maxcount: configMap["cc"]["tweet_maxcount"].parse().unwrap(),
-            loop_waittime: configMap["cc"]["loop_waittime"].parse().unwrap(),
+            target_list: config_map["cc"]["target_list"].to_string(),
+            tweet_maxcount: config_map["cc"]["tweet_maxcount"].parse().unwrap(),
+            loop_waittime: config_map["cc"]["loop_waittime"].parse().unwrap(),
         },
         access_token: test[0]["consumerKey=".len()..].to_string(),
         access_token_secret: test[1]["consumerSecret=".len()..].to_string(),
