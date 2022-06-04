@@ -4,6 +4,8 @@ mod twitter;
 use twitter::Twitter;
 
 fn main() {
+    env_logger::init();
+
     let config = bootstrap::init();
     println!(
         "{} {} {}",
@@ -17,7 +19,7 @@ fn main() {
     // TODO: Twitterから情報取得
     // list users
     // TODO: 結果を画面出力
-    tsv_header();
+    print_header("\t");
 }
 
 #[derive(Debug)]
@@ -36,7 +38,7 @@ impl CircleInfo {}
 fn ountput(lists: &Vec<CircleInfo>) {
 }
 
-fn tsv_header() {
+fn print_header(separator: &str) {
     let headers = [
         "Twitter ID",
         "Twitter Name",
@@ -53,5 +55,5 @@ fn tsv_header() {
         "プロフィール画像",
         "固定されたツイートの画像",
     ];
-    println!("{}", headers.join("\t"));
+    println!("{}", headers.join(&separator));
 }
