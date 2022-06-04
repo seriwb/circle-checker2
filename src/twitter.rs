@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Twitter {
     consummer_key: String,
     consummer_secret: String,
@@ -42,7 +43,8 @@ impl Twitter {
     // twitter.getFriendsList(userinfo.id, -1L) // フォローユーザのリスト
 }
 
-struct User {
+#[derive(Debug)]
+pub struct User {
   Name: String,
   ScreenName: String, //id
   URL: String,
