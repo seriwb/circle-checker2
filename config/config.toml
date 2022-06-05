@@ -1,5 +1,5 @@
 # 取得するリスト名（未指定の場合は自身のフォローユーザを対象にする）
-target_list = [""]
+target_list = ["", "シャニマス"]
 
 # Tweetの1回の取得数（MAX:100）
 tweet_maxcount = 100
