@@ -92,25 +92,33 @@ struct CircleInfo {
     pinned_image_urls: Vec<String>,
 }
 impl CircleInfo {
-    fn output(&self, separator: &str) {
+    fn output(&self, separator: &str, row: &usize) {
         let line = vec![
-            &self.twitter_id,
-            &self.twitter_name,
-            &self.twitter_url,
-            &self.match_string,
-            &self.space_string,
-            &self.profile_image_url,
-            &self.pinned_tweet_url,
+            self.twitter_id.clone(),
+            self.twitter_name.clone(),
+            format!("=IMAGE($M{})", &row),
+            self.match_string.clone(),
+            self.space_string.clone(),
+            format!("=IMAGE($N{})", &row),
+            format!("=IMAGE($O{})", &row),
+            format!("=IMAGE($P{})", &row),
+            format!("=IMAGE($Q{})", &row),
+            format!("https://twitter.com/{}", &self.twitter_id),
+            self.twitter_url.clone(),
+            String::from("TODO 固定されたツイート用"),
+            self.profile_image_url.clone(),
+            self.pinned_tweet_url.clone(),
         ];
         println!("{}", line.iter().map(|x| x.as_str()).collect::<Vec<&str>>().join(&separator));
     }
 }
 
 fn ountput(lists: &Vec<CircleInfo>) {
-    let separator = "\t";
+    let separator = ",";    // TODO: Windowsだとタブが表示されないかもしれない
     print_header(&separator);
-    for info in lists {
-        info.output(&separator);
+    for (i, info) in lists.iter().enumerate() {
+        let row = i+2;  // ヘッダー行を除くので2列目から
+        info.output(&separator, &row);
     }
 }
 

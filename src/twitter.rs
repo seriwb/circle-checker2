@@ -146,8 +146,8 @@ impl Twitter {
     // フォローユーザのリスト
     pub async fn get_friends_list(&self, token: &Token) -> Vec<TwitterUser> {
         let mut users: Vec<TwitterUser> = Vec::new();
+        let mut cursors = friends_of(self.account.id, &token).with_page_size(200);
         loop {
-            let mut cursors = friends_of(self.account.id, &token).with_page_size(200);
             let resp = cursors.call().await.unwrap();
             users = [users, resp.response.users].concat();
 
@@ -169,9 +169,9 @@ impl Twitter {
     // 指定のリストに含まれるユーザ情報を取得
     pub async fn get_user_list_members(&self, list_id: u64, token: &Token) -> Vec<TwitterUser> {
         let mut users: Vec<TwitterUser> = Vec::new();
+        let mut cursors =
+            members(egg_mode::list::ListID::ID(list_id), &token).with_page_size(200);
         loop {
-            let mut cursors =
-                members(egg_mode::list::ListID::ID(list_id), &token).with_page_size(200);
             let resp = cursors.call().await.unwrap();
             users = [users, resp.response.users].concat();
 
