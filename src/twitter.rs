@@ -160,7 +160,7 @@ impl Twitter {
         users
     }
 
-    // 自分がオーナのリストを優先して100件取得
+    // 自分がオーナのリストを優先して100件(API制限)取得
     pub async fn get_user_lists(&self, token: &Token) -> Vec<List> {
         let result = list(self.account.id, true, &token).await.unwrap();
         result.response
