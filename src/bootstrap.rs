@@ -4,8 +4,7 @@ use serde_derive::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct CC {
     pub target_list: Vec<String>,
-    pub tweet_maxcount: u32,
-    pub loop_waittime: u32,
+    pub separator: String,
 }
 impl CC {
     fn new() -> Result<Self, ConfigError> {

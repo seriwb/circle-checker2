@@ -69,15 +69,8 @@ Rate limit exceeded
 ## 機能
 
 - タイムラインと複数のリストを同時にチェックすることができます
-- 固定ツイートの情報を取得できます
-- 出力結果をヘッダーと一緒にGoogle Spreadsheetsに貼り付けることで、アイコンと固定ツイートの画像が表示されます
-  - ヘッダー：`Twitter ID	Twitter Name	アイコン	一致イベント名	スペース番号	画像1	画像2	画像3	画像4	Twitter URL	Twitter Link	固定されたツイート	プロフィール画像	固定されたツイートの画像`
-
-
-
-## 今後の予定
-
-- TLに流れてくるRTを対象にするオプション追加
+- 出力結果をヘッダーと一緒にGoogle Spreadsheetsに貼り付けることで、アイコンの画像が表示されます
+  - ヘッダー：`Twitter ID,Twitter Name,アイコン,一致イベント名,スペース番号,Twitter URL,Twitter Link,プロフィール画像`
 
 
 ## 要望＆バグ報告

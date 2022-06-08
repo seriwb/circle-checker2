@@ -10,6 +10,7 @@ use egg_mode::{
     KeyPair, Token,
 };
 use log::debug;
+use scraper::Html;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -233,6 +234,40 @@ fn load_access_tokens() -> Result<Twitter, String> {
 
     debug!("load data: {:?}", &twitter);
     return Ok(twitter);
+}
+
+// 固定されたツイートのIDを取得する
+// -> HTMLが返ってこないので、ヘッドレスブラウザでも入れないと無理
+pub fn  get_pinned_tweet_status(screen_name: &String) -> String {
+    let url =  format!("https://twitter.com/{}", &screen_name);
+    println!("{}", &url);
+
+    let body = reqwest::blocking::get(url).unwrap().text().unwrap();
+    let document = Html::parse_document(&body);
+
+    let article = scraper::Selector::parse("article").unwrap();
+    let pin_svg = scraper::Selector::parse("svg > g > path").unwrap();
+    let status_value = scraper::Selector::parse("a > time").unwrap();
+
+    // 最初のarticleを取る
+    let article_context = document.select(&article).next().unwrap();
+    let pinned = article_context.select(&pin_svg).next();
+    if pinned.is_none() {
+        return "".to_string();
+    }
+    let d = pinned.unwrap().value().attr("d").unwrap();
+    println!("{}", &d);
+    if d != "M20.235 14.61c-.375-1.745-2.342-3.506-4.01-4.125l-.544-4.948 1.495-2.242c.157-.236.172-.538.037-.787-.134-.25-.392-.403-.675-.403h-9.14c-.284 0-.542.154-.676.403-.134.25-.12.553.038.788l1.498 2.247-.484 4.943c-1.668.62-3.633 2.38-4.004 4.116-.04.16-.016.404.132.594.103.132.304.29.68.29H8.64l2.904 6.712c.078.184.26.302.458.302s.38-.118.46-.302l2.903-6.713h4.057c.376 0 .576-.156.68-.286.146-.188.172-.434.135-.59z" {
+        return "".to_string();
+    }
+
+    let pinned_status = article_context.select(&status_value).next().unwrap();
+    let status = pinned_status.parent().unwrap().value().as_element().unwrap().attr("href").unwrap();
+    println!("{}", &status);
+    if status.trim().is_empty() {
+        return "".to_string();
+    }
+    status.to_string()
 }
 
 #[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]

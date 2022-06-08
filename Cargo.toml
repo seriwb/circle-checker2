@@ -13,7 +13,10 @@ env_logger = "0.8"
 futures = "0.3"
 tokio = { version = "1", features = ["full"]}
 egg-mode = "0.16"
-#reqwest = { version = "0.11", features = ["json", "blocking"] }
+# egg-mode = { git = "https://github.com/seriwb/egg-mode", branch = "feat/pinned" }
+# egg-mode = { path = "../egg-mode", version = "0.16.1" }
+scraper = "0.13"
+reqwest = { version = "0.11", features = ["json", "blocking"] }
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
