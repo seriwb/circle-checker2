@@ -1,21 +1,52 @@
 mod bootstrap;
 mod twitter;
 
+use std::{
+    fs::{File, self},
+    io::{BufRead, BufReader, Write},
+};
+
+use chrono::{Local};
 use egg_mode::user::TwitterUser;
+use log::debug;
 use regex::Regex;
 use twitter::Twitter;
+
+const HEADERS: [&str; 8] = [
+    "Twitter ID",
+    "Twitter Name",
+    "アイコン",
+    "一致イベント名",
+    "スペース番号",
+    // "画像1",
+    // "画像2",
+    // "画像3",
+    // "画像4",
+    "Twitter URL",
+    "Twitter Link",
+    // "固定されたツイート",
+    "プロフィール画像",
+    // "固定されたツイートの画像1",
+    // "画像2",
+    // "画像3",
+    // "画像4",
+];
+const DIR: &str = "output";
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
 
     let config = bootstrap::init();
+    let filters = load_filter();
 
     let mut twitter = Twitter::new(config.consumer_key, config.consumer_secret);
     let token = twitter.authenticate().await;
 
     let users_lists = twitter.get_user_lists(&token).await;
-    // println!("{:?}", &users_lists);
+    if config.cc.file_output {
+        mkdir(&DIR);
+    }
 
     for target in config.cc.target_list {
         let circles: Vec<CircleInfo> = if target == "" {
@@ -24,7 +55,7 @@ async fn main() {
             // フィルタリングしたデータをCircleInfoに格納
             users
                 .iter()
-                .filter_map(|user| check_user_info(user).ok())
+                .filter_map(|user| check_user_info(user, &filters).ok())
                 .collect::<Vec<CircleInfo>>()
         } else {
             // リストのIDを取得
@@ -40,27 +71,45 @@ async fn main() {
             // フィルタリングしたデータをCircleInfoに格納
             users
                 .iter()
-                .filter_map(|user| check_user_info(user).ok())
+                .filter_map(|user| check_user_info(user, &filters).ok())
                 .collect::<Vec<CircleInfo>>()
         };
 
-        // 結果を画面出力
         let title = if target == "" {
             "タイムライン"
         } else {
             &target
         };
         println!("{}", title);
-        ountput(&circles, config.cc.separator.as_str());
+
+        if config.cc.file_output {
+            // 結果をファイル出力
+            file_output(&circles, &title, config.cc.separator.as_str());
+        } else {
+            // 結果を画面出力
+            output(&circles, config.cc.separator.as_str());
+        }
     }
 }
 
-fn check_user_info(user: &TwitterUser) -> Result<CircleInfo, String> {
-    // TODO: フィルタ群でマッチング
-    let filters = vec![r"(C9\d|Ｃ９[０-９]|C1\d\d|Ｃ１[０-９][０-９])(.*)".to_string()];
+// フィルタ設定の読み込み
+fn load_filter() -> Vec<String> {
+    let file = File::open("config/filter.txt").expect("filter.txtがありません");
+    let mut filters = Vec::new();
+    for line in BufReader::new(file).lines() {
+        if let Ok(filter) = line {
+            filters.push(filter);
+        }
+    }
+    debug!("{:?}", &filters);
+    filters
+}
+
+fn check_user_info(user: &TwitterUser, filters: &Vec<String>) -> Result<CircleInfo, String> {
+    // フィルタ群でマッチング
     for filter in filters {
-        let hoge = format!(r"{}", &filter);
-        let re = Regex::new(&hoge).unwrap();
+        let re_f = format!(r"({})(.*)", &filter);
+        let re = Regex::new(&re_f).unwrap();
         let caps = re.captures(&user.name);
         if caps.is_none() {
             continue;
@@ -80,6 +129,43 @@ fn check_user_info(user: &TwitterUser) -> Result<CircleInfo, String> {
     return Err("non".to_string());
 }
 
+
+fn mkdir(file_name: &str) -> bool {
+    match fs::create_dir(file_name) {
+        Err(_e) => false,
+        Ok(_) => true,
+    }
+}
+
+fn file_output(lists: &Vec<CircleInfo>, title: &str, separator: &str) {
+    let identifier = match separator {
+        "," => "csv",
+        "\t" => "tsx",
+        _ => "txt,",
+    };
+    let date_text = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
+    let file_path = format!("{DIR}/{title}_{date_text}.{identifier}");
+    let mut file = File::create(&file_path).expect(format!("作成失敗: {}", &file_path).as_str());
+
+    let line = HEADERS.join(&separator);
+    writeln!(file, "{}", line).expect(format!("書き込み失敗: {}", &line).as_str());
+
+    for (i, info) in lists.iter().enumerate() {
+        let row = i + 2; // ヘッダー行を除くので2列目から
+        let line = info.to_string(&separator, &row);
+        writeln!(file, "{}", line).expect(format!("書き込み失敗: {}", &line).as_str());
+    }
+    println!("{file_path}");
+}
+
+fn output(lists: &Vec<CircleInfo>, separator: &str) {
+    println!("{}", HEADERS.join(&separator));
+    for (i, info) in lists.iter().enumerate() {
+        let row = i + 2; // ヘッダー行を除くので2列目から
+        println!("{}", info.to_string(&separator, &row));
+    }
+}
+
 #[derive(Debug)]
 struct CircleInfo {
     twitter_id: String,
@@ -92,11 +178,11 @@ struct CircleInfo {
     // pinned_image_urls: Vec<String>,
 }
 impl CircleInfo {
-    fn output(&self, separator: &str, row: &usize) {
+    fn to_string(&self, separator: &str, row: &usize) -> String {
         let line = vec![
             self.twitter_id.clone(),
             self.twitter_name.clone(),
-            format!("=IMAGE($M{})", &row),
+            format!("=IMAGE($H{})", &row),
             self.match_string.clone(),
             self.space_string.clone(),
             // format!("=IMAGE($N{})", &row),
@@ -109,37 +195,9 @@ impl CircleInfo {
             self.profile_image_url.clone(),
             // self.pinned_tweet_url.clone(),
         ];
-        println!("{}", line.iter().map(|x| x.as_str()).collect::<Vec<&str>>().join(&separator));
+        line.iter()
+            .map(|x| x.as_str())
+            .collect::<Vec<&str>>()
+            .join(&separator)
     }
-}
-
-fn ountput(lists: &Vec<CircleInfo>, separator: &str) {
-    print_header(&separator);
-    for (i, info) in lists.iter().enumerate() {
-        let row = i+2;  // ヘッダー行を除くので2列目から
-        info.output(&separator, &row);
-    }
-}
-
-fn print_header(separator: &str) {
-    let headers = [
-        "Twitter ID",
-        "Twitter Name",
-        "アイコン",
-        "一致イベント名",
-        "スペース番号",
-        // "画像1",
-        // "画像2",
-        // "画像3",
-        // "画像4",
-        "Twitter URL",
-        "Twitter Link",
-        // "固定されたツイート",
-        "プロフィール画像",
-        // "固定されたツイートの画像1",
-        // "画像2",
-        // "画像3",
-        // "画像4",
-    ];
-    println!("{}", headers.join(&separator));
 }
