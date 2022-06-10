@@ -118,7 +118,10 @@ fn check_user_info(user: &TwitterUser, filters: &Vec<String>) -> Result<CircleIn
         return Ok(CircleInfo {
             twitter_id: user.screen_name.clone(),
             twitter_name: user.name.clone(),
-            twitter_url: user.url.clone().unwrap(),
+            twitter_url: match user.url.clone() {
+                Some(url) => url,
+                None => "".to_string(),
+            },
             match_string: cap_strs[1].to_string(),
             space_string: cap_strs[2].to_string(),
             profile_image_url: user.profile_image_url.clone(),
